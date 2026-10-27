@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repaso Puentes de Embarque</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=Share+Tech+Mono&display=swap">
+<style>
+:root{
+  /* Concepto: plataforma de aeropuerto. Concreto frío, línea amarilla de rodaje y el rojo LED de un panel VDGS. */
+  --bg:#E7EBED; --surface:#F7F9FA; --surface-2:#DCE2E5; --ink:#101C26; --muted:#4A5B67; --line:#C0CAD0;
+  --yellow:#F4B400; --on-yellow:#1C1500; --tint:#FFF2C7;
+  --red:#C8281F; --blue:#1A5CA6; --ok:#17744A; --bad:#B3261E; --ok-bg:#DCF2E6; --bad-bg:#FBE0DD;
+  --led-bg:#12171B; --led:#FF5B3D; --panel:#2A343B; --panel-2:#1D262C; --panel-line:#52626C; --panel-ink:#E8EEF1;
+  --font-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --font-body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-led:"Share Tech Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1418; --surface:#172027; --surface-2:#22303A; --ink:#E7EDF0; --muted:#9AAAB4; --line:#2B3A44;
+    --tint:#3A3000; --red:#FF7366; --blue:#7DB4F0; --ok:#4FCB8E; --bad:#FF8A80; --ok-bg:#11392A; --bad-bg:#43201C;
+    --panel:#1B242A; --panel-2:#10171B; --panel-line:#46555F;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1418; --surface:#172027; --surface-2:#22303A; --ink:#E7EDF0; --muted:#9AAAB4; --line:#2B3A44;
+  --tint:#3A3000; --red:#FF7366; --blue:#7DB4F0; --ok:#4FCB8E; --bad:#FF8A80; --ok-bg:#11392A; --bad-bg:#43201C;
+  --panel:#1B242A; --panel-2:#10171B; --panel-line:#46555F;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.wrap{max-width:900px;margin:0 auto;padding-block:22px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Cabecera */
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;align-items:end}
+.eyebrow{margin:0 0 6px;font-family:var(--font-led);font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{margin:0;font-family:var(--font-display);font-weight:700;font-size:clamp(2.6rem,9vw,4.4rem);line-height:.95;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.lede{margin:12px 0 0;max-width:46ch;color:var(--muted)}
+.vdgs{background:var(--led-bg);border:3px solid #3B464E;border-radius:8px;padding:14px 18px 12px;min-width:0}
+.vdgs-label{display:block;font-family:var(--font-led);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:#8FA0AA}
+.led{font-family:var(--font-led);font-size:clamp(2.2rem,10vw,3.4rem);line-height:1.1;letter-spacing:.06em;color:var(--led);text-shadow:0 0 12px rgba(255,91,61,.55);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.vdgs-sub{font-family:var(--font-led);font-size:.8rem;color:#8FA0AA}
+.apron{height:8px;margin-block:22px 20px;background:repeating-linear-gradient(90deg,var(--yellow) 0 38px,transparent 38px 58px)}
+
+/* Cifras */
+.keys-title{margin:0 0 10px;font-family:var(--font-led);font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:14px 18px;margin:0;padding:0;list-style:none}
+.keys li{min-width:0;border-top:3px solid var(--ink);padding-top:6px}
+.keys .num{display:block;font-family:var(--font-display);font-weight:700;font-size:2.5rem;line-height:1}
+.keys .lab{display:block;font-size:.88rem;color:var(--muted);line-height:1.3}
+
+/* Pestañas */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-block:26px 18px}
+.tab{padding:9px 16px;border:2px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-family:var(--font-display);font-weight:600;font-size:1.2rem;letter-spacing:.04em;text-transform:uppercase}
+.tab:hover{border-color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--yellow);border-color:var(--yellow);color:var(--on-yellow)}
+
+/* Elementos comunes */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(16px,4vw,26px)}
+h2{margin:0 0 8px;font-family:var(--font-display);font-weight:700;font-size:1.9rem;line-height:1.1;text-transform:uppercase;text-wrap:balance}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.tag{display:inline-block;padding:2px 9px;border-radius:4px;background:var(--surface-2);font-family:var(--font-led);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+.btn{padding:11px 18px;border:2px solid var(--ink);border-radius:8px;background:transparent;cursor:pointer;font-weight:600;min-height:46px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--yellow);border-color:var(--yellow);color:var(--on-yellow)}
+.btn.primary:hover{filter:brightness(1.07);background:var(--yellow)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:end;margin-bottom:14px}
+.field{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.field select{min-height:46px;padding:8px 12px;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:min(260px,100%)}
+.check{display:flex;gap:8px;align-items:center;min-height:46px}
+.check input{width:20px;height:20px;accent-color:var(--yellow)}
+.meta{font-family:var(--font-led);font-size:.88rem;color:var(--muted);margin-bottom:12px}
+
+/* Tarjetas */
+.flash{display:flex;flex-direction:column;gap:14px;align-items:flex-start;justify-content:space-between;width:100%;min-height:260px;padding:clamp(18px,4vw,30px);text-align:left;cursor:pointer;background:var(--surface);border:2px solid var(--ink);border-radius:12px;box-shadow:6px 6px 0 var(--ink)}
+.flash.back{background:var(--tint);border-color:var(--yellow);box-shadow:6px 6px 0 var(--yellow)}
+.flash-text{font-size:clamp(1.25rem,4.4vw,1.65rem);line-height:1.3;font-weight:600;text-wrap:pretty;overflow-wrap:anywhere}
+.flash-x{font-size:1rem;color:var(--muted);overflow-wrap:anywhere}
+.flash.back .flash-x{color:var(--ink);opacity:.85}
+.hint{font-family:var(--font-led);font-size:.8rem;letter-spacing:.06em;color:var(--muted)}
+.flash.back .hint{color:var(--ink);opacity:.7}
+
+/* Quiz */
+.qhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center;font-family:var(--font-led);font-size:.88rem;color:var(--muted)}
+.bar{height:6px;background:var(--surface-2);border-radius:3px;margin:10px 0 18px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--yellow)}
+.prompt{font-family:var(--font-body);font-weight:600;font-size:clamp(1.2rem,4vw,1.5rem);line-height:1.3;text-transform:none;margin-bottom:16px;text-wrap:pretty}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:13px 14px;border:2px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;overflow-wrap:anywhere}
+.opt:hover{border-color:var(--ink)}
+.opt .ltr{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:4px;background:var(--surface-2);font-family:var(--font-led)}
+.opt.sel{border-color:var(--ink);background:var(--surface-2)}
+.opt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.opt.bad{border-color:var(--bad);background:var(--bad-bg)}
+.opt[disabled]{cursor:default}
+.fb{margin-top:16px;padding:14px 16px;border-radius:8px;border-left:6px solid var(--ok);background:var(--ok-bg)}
+.fb.bad{border-left-color:var(--bad);background:var(--bad-bg)}
+.fb strong{display:block;font-family:var(--font-display);font-size:1.25rem;letter-spacing:.04em;text-transform:uppercase}
+.fb p{margin:4px 0 0}
+.score{display:inline-block;padding:10px 20px;border-radius:8px;background:var(--led-bg);border:3px solid #3B464E;font-family:var(--font-led);font-size:clamp(2.2rem,10vw,3.4rem);letter-spacing:.06em;color:var(--led);text-shadow:0 0 12px rgba(255,91,61,.55);margin:6px 0 12px}
+.verdict{font-family:var(--font-display);font-weight:700;font-size:1.7rem;text-transform:uppercase;letter-spacing:.03em}
+.verdict.ok{color:var(--ok)}
+.verdict.bad{color:var(--bad)}
+.misses{display:grid;gap:10px;margin:16px 0 0;padding:0;list-style:none}
+.misses li{padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.misses b{display:block;margin-bottom:2px}
+
+/* Procedimiento */
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.seg button{padding:9px 16px;border:2px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-weight:600;min-height:44px}
+.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.done{display:grid;gap:8px;margin:14px 0;padding:0;list-style:none}
+.done li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:var(--ok-bg);border:1px solid var(--ok)}
+.done .n{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ok);color:var(--bg);font-family:var(--font-led);font-size:.9rem}
+.pool{display:grid;gap:8px;margin-top:14px}
+.step{width:100%;text-align:left;padding:12px 14px;border:2px dashed var(--line);border-radius:8px;background:var(--surface);cursor:pointer;overflow-wrap:anywhere}
+.step:hover{border-color:var(--ink)}
+.step.wrong{border-color:var(--bad);background:var(--bad-bg);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.status{font-family:var(--font-led);font-size:.9rem;color:var(--muted);margin:0}
+
+/* Tablero */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:16px;border-radius:12px;background:var(--panel);border:3px solid var(--panel-line)}
+.ctl{display:grid;gap:6px;justify-items:center;padding:12px 8px;border:2px solid var(--panel-line);border-radius:10px;background:var(--panel-2);color:var(--panel-ink);cursor:pointer;min-width:0}
+.ctl:hover{border-color:var(--panel-ink)}
+.ctl .glyph{font-size:1.5rem;line-height:1;letter-spacing:.2em;padding-left:.2em}
+.ctl .name{font-family:var(--font-led);font-size:.82rem;letter-spacing:.06em;text-align:center;overflow-wrap:anywhere}
+.ctl.red{border-color:#E0483D}
+.ctl.red .glyph{color:#FF7366}
+.ctl[aria-pressed="true"]{outline:3px solid var(--yellow);outline-offset:2px}
+.detail{margin-top:14px}
+.detail h2{margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.9rem}
+.chip i{width:14px;height:14px;border-radius:50%;display:inline-block}
+
+@media (prefers-reduced-motion: reduce){ .step.wrong{animation:none} }
+</style>
+
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Curso teórico · OPAIN</p>
+      <h1>Puentes de embarque</h1>
+      <p class="lede">Para aprobar el curso necesitas 4 respuestas correctas. Esta guía no asegura que el examen use las mismas preguntas, así que entiende el porqué de cada respuesta.</p>
+    </div>
+    <div class="vdgs" aria-live="polite">
+      <span class="vdgs-label">Tu avance</span>
+      <div class="led" id="led">0/49</div>
+      <div class="vdgs-sub" id="ledSub">preguntas dominadas</div>
+    </div>
+  </header>
+  <div class="apron" aria-hidden="true"></div>
+
+  <section aria-labelledby="keysT">
+    <h2 class="keys-title" id="keysT">Cifras clave de la guía</h2>
+    <ul class="keys">
+      <li><span class="num">2</span><span class="lab">personas de la aerolínea como máximo al operar el puente</span></li>
+      <li><span class="num">15 min</span><span class="lab">de anticipación al puente antes de que llegue el avión</span></li>
+      <li><span class="num">4</span><span class="lab">paros de emergencia en el puente</span></li>
+      <li><span class="num">3</span><span class="lab">FINISH en pantalla al terminar el reposo</span></li>
+      <li><span class="num">2 m</span><span class="lab">de la puerta del avión al acoplar con el joystick</span></li>
+      <li><span class="num">400 Hz</span><span class="lab">unidad GPU del equipo Hobart</span></li>
+    </ul>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Modos de estudio" id="tabs"></nav>
+  <section id="view" role="tabpanel" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+"use strict";
+
+var TOPICS={reglas:"Reglas y personal",equipos:"Partes y equipos",sensores:"Sensores",mandos:"Mandos y joystick",llave:"Llave y autonivelador",emergencia:"Emergencias y reposo"};
+
+var Q=[
+{t:"reglas",q:"Llegas al puente para operarlo y encuentras objetos o elementos abandonados por otras aerolíneas. ¿Qué haces?",a:"Informar al CCO o al inspector de Terminales de OPAIN.",d:["Retirarlos y entregarlos en la oficina de tu aerolínea.","Dejarlos donde están y avisar al jefe de tu turno."],x:"CCO: 4397070 ext. 5041. Desde las extensiones del módulo OPAIN: 11279."},
+{t:"reglas",q:"¿Cuántas personas de la aerolínea pueden estar presentes, como máximo, mientras se opera el puente?",a:"2",d:["3","4"]},
+{t:"reglas",q:"¿Qué entidades ajenas a tu compañía pueden entrar al puente durante el acople y el desacople?",a:"Servicio Médico Aeroportuario, Migración Colombia, Aeronáutica Civil, DIAN, Policía Aeroportuaria y personal de Mantenimiento, Seguridad o Terminales de OPAIN.",d:["Cualquier funcionario de otra aerolínea que lo necesite.","Solo la tripulación y el personal de rampa de tu aerolínea."]},
+{t:"reglas",q:"Un funcionario de la aerolínea puede subir por la escalera de servicio cuando el puente se encuentra en movimiento.",a:"Falso",d:["Verdadero"],tf:true,x:"Nadie debe subir ni bajar por la escalera de servicio mientras el puente se mueve."},
+{t:"equipos",q:"¿Qué partes componen los puentes de abordaje?",a:"Vagones o túneles A, B y C, cabina, escalera de servicio y el buggie o carretón de ruedas.",d:["Túneles A y B, cabina, mangas de carga y unidad GPU.","Vagones A, B y C, cabina, VDGS y cadena de seguridad."]},
+{t:"equipos",q:"¿Qué parte del puente permite su movimiento?",a:"El buggie o carretón de ruedas.",d:["La cabina.","La escalera de servicio."],x:"El buggie mueve el puente hacia la posición solicitada."},
+{t:"equipos",q:"El VDGS es…",a:"Una guía visual.",d:["Un sensor que frena el puente.","La unidad de energía GPU de 400 Hz."]},
+{t:"equipos",q:"¿Qué función cumple el VDGS?",a:"Le da al piloto una guía sencilla y confiable para llevar la aeronave.",d:["Detecta la aeronave y baja la velocidad del puente.","Ajusta la altura del puente según la altura del avión."]},
+{t:"equipos",q:"Según el VDGS, ¿cómo verificas que la aeronave quedó en la posición de parqueo correcta?",a:"Verificando que la pantalla del VDGS indique STOP-OK.",d:["Verificando que la pantalla muestre 3 FINISH.","Esperando que el piloto apague los motores."]},
+{t:"equipos",q:"Si el VDGS muestra «BRIN» o «Exx», ¿qué se hace?",a:"Se corrige la situación antes del adosamiento; los mensajes «Exx» se reportan al CCO para coordinar mantenimiento.",d:["Se ignora si el puente se mueve con normalidad.","Se adosa igual y se reporta al terminar el vuelo."],x:"BRIN significa «bridge in». Exx es un código de error (E y un número) y su origen puede ser diverso."},
+{t:"sensores",q:"¿De qué color son los sensores de aproximación?",a:"Amarillos.",d:["Azules.","Rojos."]},
+{t:"sensores",q:"¿Cuál es la función de los sensores de aproximación?",a:"Evitan colisiones entre la aeronave y el puente, disminuyendo su velocidad.",d:["Permiten que el puente suba y baje sin pasar su límite máximo o mínimo.","Apagan el puente cuando se activa un paro de emergencia."],x:"Están a cada extremo de la cabina. Detectan la aeronave y bajan la velocidad al mínimo mientras se acopla."},
+{t:"sensores",q:"¿De qué color son los sensores de contacto?",a:"Azules.",d:["Amarillos.","Verdes."]},
+{t:"sensores",q:"¿Dónde están ubicados los sensores de contacto?",a:"Junto al borde del protector de la cabina.",d:["En cada extremo del carretón de ruedas.","En la escalera de servicio."]},
+{t:"sensores",q:"¿Para qué sirven los sensores de contacto?",a:"Evitan golpear el fuselaje de la aeronave.",d:["Detectan la aeronave y reducen la velocidad.","Limitan la altura máxima del puente."]},
+{t:"sensores",q:"¿Cuál es la función de los sensores de altura?",a:"Permiten que el puente suba y baje de manera adecuada, sin pasar su límite máximo o mínimo.",d:["Detectan la aeronave y bajan la velocidad al acoplar.","Avisan al piloto en qué punto debe detenerse."]},
+{t:"llave",q:"¿Dónde está ubicado el autonivelador?",a:"En el lado derecho exterior de la cabina.",d:["En el lado izquierdo interior de la cabina.","Sobre el carretón de ruedas."]},
+{t:"llave",q:"¿Qué función cumple el sistema de autonivelación?",a:"Adapta la altura del puente a la altura del avión, que varía cuando los pasajeros entran y salen.",d:["Deja el puente a 2 metros de la puerta del avión.","Gira la cabina hacia la puerta de la aeronave."]},
+{t:"llave",q:"¿Cómo activas el autonivelador cuando se acopla a una aeronave?",a:"Girando la llave a la opción AUTO LEVEL.",d:["Girando la llave a la opción ON.","Girando la llave a la opción OFF."]},
+{t:"llave",q:"¿Cómo desactivas el autonivelador para recoger el puente?",a:"Girando la llave a la opción ON.",d:["Girando la llave a la opción AUTO LEVEL.","Girando la llave a la opción OFF."]},
+{t:"llave",q:"¿Cómo se apaga el puente de embarque?",a:"Girando la llave a la opción OFF.",d:["Girando la llave a la opción ON.","Girando la llave a la opción AUTO LEVEL."]},
+{t:"mandos",q:"¿Qué función cumplen los botones BRIDGE?",a:"Movimiento vertical: hacia arriba o hacia abajo.",d:["Rotación de la cabina.","Apertura y cierre de la puerta de cabina."]},
+{t:"mandos",q:"¿Qué función cumplen los botones CABIN?",a:"Rotación de cabina: gira hacia la derecha o la izquierda según el ajuste.",d:["Ajuste de piso de la cabina de control.","Movimiento vertical del puente."]},
+{t:"mandos",q:"¿Qué función cumplen los botones DOOR?",a:"Apertura y cierre de la puerta de cabina.",d:["Rotación de la cabina.","Encendido de la luz de plataforma."]},
+{t:"mandos",q:"¿Qué función cumplen los botones FLOOR?",a:"Ajuste de piso de la cabina de control.",d:["Movimiento vertical del puente.","Apertura y cierre de la puerta de cabina."]},
+{t:"mandos",q:"¿Qué movimientos hace la palanca de control o JOYSTICK?",a:"Hacia la derecha y la izquierda, y hacia adelante y hacia atrás.",d:["Subir y bajar el puente.","Subir, bajar y rotar la cabina."],x:"Da el movimiento horizontal al puente."},
+{t:"mandos",q:"En la función de JOYSTICK, ¿qué indica la opción LEFT?",a:"El carretón de ruedas gira hacia la izquierda.",d:["La cabina rota hacia la izquierda.","El puente baja."]},
+{t:"mandos",q:"En la función de JOYSTICK, ¿qué indica la opción RIGHT?",a:"El carretón de ruedas gira hacia la derecha.",d:["La cabina rota hacia la derecha.","El puente sube."]},
+{t:"mandos",q:"Para que las funciones del JOYSTICK operen, se debe…",a:"Oprimir el botón DEAD MAN SWITCH.",d:["Girar la llave a AUTO LEVEL.","Oprimir PRIORITY BACK-OFF."],x:"Norma DEADMAN: se presiona la parte superior de la cabeza del joystick hacia abajo para que se genere la orden de movimiento. La guía escribe «DEAD MEAN SWITCH»."},
+{t:"mandos",q:"Las funciones POINT AND GO y MAINTENANCE son de uso exclusivo de…",a:"El personal de mantenimiento de OPAIN.",d:["El operador de la aerolínea.","El Centro de Control de Operaciones (CCO)."],x:"Dirigen el puente a una posición para fines de mantenimiento."},
+{t:"mandos",q:"¿Qué luz se debe encender de manera obligatoria en la operación nocturna?",a:"FLOODLIGHT, la luz de la zona de plataforma.",d:["INTERNAL LIGHT, las luces internas del puente.","Ninguna: el puente trae iluminación automática."]},
+{t:"mandos",q:"En modo manual, ¿cómo se recomienda adosar el puente a la aeronave?",a:"En forma de L hacia la aeronave, para evitar colisiones.",d:["En línea recta desde la rotonda, a máxima velocidad.","Con el autonivelador activado desde el inicio."],x:"En modo manual el funcionario opera todo el puente con el JOY STICK."},
+{t:"emergencia",q:"¿Cómo desbloqueas el puente cuando se activa la alarma «SAFETY HOOP ACTIVATED»?",a:"Apagando el puente desde la cabina de mando y luego halando los sensores de contacto para retirar el pin de seguridad.",d:["Girando la llave a AUTO LEVEL y moviendo el joystick.","Oprimiendo PRIORITY BACK-OFF hasta que se apague la alarma."]},
+{t:"emergencia",q:"¿Cuántos paros de emergencia tiene el puente y dónde están?",a:"4: cabina de mando, carretón de ruedas, gabinetes eléctricos y panel de usuario del VDGS.",d:["2: cabina de mando y carretón de ruedas.","3: cabina de mando, escalera de servicio y VDGS."],x:"El botón de emergencia se opera cuando el puente se mueve de forma no deseada y exponen la aeronave o el puente."},
+{t:"emergencia",q:"¿Qué función cumple el botón PRIORITY BACK-OFF?",a:"Detener todas las funciones del puente.",d:["Regresar el puente a su posición de reposo.","Apagar las luces del puente."],x:"Es para emergencia extrema: cuando hay que aislar el puente de la aeronave o viceversa."},
+{t:"emergencia",q:"¿Qué función cumple la opción REPOSO?",a:"Regresa el puente automáticamente a su posición inicial.",d:["Apaga el puente y las luces.","Detiene todas las funciones del puente."]},
+{t:"emergencia",q:"¿Cómo confirmas que el puente está en posición de reposo?",a:"Con 3 FINISH en la pantalla y el buggie dentro de la zona de estacionamiento del puente.",d:["Con STOP-OK en el VDGS y la cabina cerrada.","Con la luz interna apagada y la llave en OFF."]},
+{t:"emergencia",q:"¿Cuáles son los 3 movimientos básicos que muestran FINISH al terminar la aproximación o el reposo?",a:"Posición de llanta, altura y cabina.",d:["Puerta, cabina y luces.","Autonivelador, zapato de seguridad y cadena."]},
+{t:"emergencia",q:"¿Qué precauciones debes tener al mover el puente?",a:"Hacer un 360 para ver que no haya obstáculos, y no permitir personas en la escalera de servicio, en el área de seguridad del puente ni asistencia de sillas de ruedas dentro del puente.",d:["Solo hacer el 360 de verificación.","Avisar al piloto por radio y mover el puente despacio."],x:"La guía lo plantea como «todas las anteriores»."},
+{t:"equipos",q:"Al llevar el puente a reposo con los cables de GPU del equipo Hobart, ¿qué debes verificar?",a:"Que los cables estén bien recogidos en la parte superior de los ganchos antes de llevar el puente a reposo.",d:["Que la GPU siga encendida a 400 Hz.","Que los cables queden tendidos sobre la plataforma."],x:"Lo verifica el operador desde la cabina."},
+{t:"equipos",q:"¿Qué es el equipo Hobart?",a:"La unidad GPU (400 Hz).",d:["El sistema de autonivelación.","El sistema VDGS."]},
+{t:"equipos",q:"¿Qué función cumple el zapato de seguridad?",a:"Protege la puerta de la aeronave cuando falla el autonivelador y hace sus funciones.",d:["Mantiene abierta la puerta de la cabina.","Evita que el buggie se mueva en reposo."],x:"Protege al puente y al avión si la autonivelación falla."},
+{t:"equipos",q:"¿Cuál es el lugar correcto para ubicar el zapato de seguridad cuando el PLB está adosado?",a:"En el espacio de reposo metálico, frente a la cabina de mando.",d:["Sobre el piso de la pasarela, junto a la puerta.","Colgado en la escalera de servicio."],x:"Ojo: en el procedimiento de acople, el zapato se pone en el centro de la puerta del avión una vez abierta. Al desacoplar, vuelve a la placa metálica."},
+{t:"equipos",q:"¿Para qué sirve la cadena de seguridad?",a:"Deja el puente en condición segura en el momento del acople o desacople.",d:["Sostiene los cables de la GPU.","Limita la altura máxima del puente."]},
+{t:"reglas",q:"¿En qué momento pueden entrar los funcionarios de apoyo de la aerolínea (sillas de ruedas y asistencia a pasajeros)?",a:"Al terminar el adosamiento del puente a la aeronave.",d:["Mientras el puente se acopla, para ganar tiempo.","Cuando el piloto lo autoriza por radio."]},
+{t:"reglas",q:"Si hay asistencias de sillas de ruedas y se está adosando el puente, ¿dónde deben ubicarse?",a:"En la pasarela del PLB.",d:["Dentro de la cabina del puente.","En la escalera de servicio."]},
+{t:"reglas",q:"El operador debe estar en la consola de mando cuando el puente está acoplado a la aeronave.",a:"Verdadero",d:["Falso"],tf:true},
+{t:"reglas",q:"¿A quién reportas un puente de abordaje que está fuera de las normas establecidas?",a:"Al CCO (Centro de Control de Operaciones) o al inspector de terminal.",d:["Al piloto de la aeronave.","Al jefe de rampa de tu aerolínea."]},
+{t:"reglas",q:"¿Con cuánta anticipación debe llegar el funcionario de la aerolínea al puente antes de que la aeronave llegue a la posición de parqueo?",a:"15 minutos.",d:["5 minutos.","30 minutos."]}
+];
+var TOTAL=Q.length;
+
+var KEY="puentes-repaso-v1";
+var S={known:{},solved:{}};
+try{var raw=localStorage.getItem(KEY); if(raw){var p=JSON.parse(raw); if(p&&p.known)S.known=p.known; if(p&&p.solved)S.solved=p.solved;}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+var view=document.getElementById("view");
+var tabsEl=document.getElementById("tabs");
+
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function count(o){return Object.keys(o).length;}
+function updateLed(){
+  var n=count(S.solved);
+  document.getElementById("led").textContent = n>=TOTAL ? "STOP-OK" : n+"/"+TOTAL;
+  document.getElementById("ledSub").textContent = n>=TOTAL ? "dominaste todas" : "preguntas dominadas";
+}
+function topicOptions(withAll){
+  var h=withAll?'<option value="todas">Todos los temas ('+TOTAL+')</option>':"";
+  Object.keys(TOPICS).forEach(function(k){
+    var n=Q.filter(function(q){return q.t===k;}).length;
+    h+='<option value="'+k+'">'+TOPICS[k]+' ('+n+')</option>';
+  });
+  return h;
+}
+
+/* ---------- Tarjetas ---------- */
+function viewCards(){
+  var topic="todas", missing=false, deck=[], pos=0, flipped=false;
+  view.innerHTML='<div class="toolbar">'+
+    '<label class="field" for="fTopic"><span>Tema</span><select id="fTopic">'+topicOptions(true)+'</select></label>'+
+    '<label class="check" for="fMiss"><input type="checkbox" id="fMiss"> Solo las que me faltan</label>'+
+    '<button class="btn" id="fShuffle" type="button">Mezclar</button></div>'+
+    '<p class="meta" id="fMeta"></p><div id="fStage"></div>';
+  var stage=document.getElementById("fStage"), meta=document.getElementById("fMeta");
+
+  function inTopic(i){return topic==="todas"||Q[i].t===topic;}
+  function build(){
+    deck=[];
+    for(var i=0;i<Q.length;i++){ if(inTopic(i)&&(!missing||!S.known[i])) deck.push(i); }
+    pos=0; flipped=false; draw();
+  }
+  function draw(){
+    var all=0,known=0;
+    for(var i=0;i<Q.length;i++){ if(inTopic(i)){all++; if(S.known[i])known++;} }
+    if(!deck.length){
+      meta.textContent="Sabes "+known+" de "+all+" en este tema";
+      stage.innerHTML='<div class="panel"><h2>Sin tarjetas pendientes</h2><p class="muted">Ya marcaste todas las de este tema como sabidas. Quita el filtro «Solo las que me faltan» para repasarlas otra vez.</p></div>';
+      return;
+    }
+    var id=deck[pos], q=Q[id];
+    meta.textContent="Tarjeta "+(pos+1)+" de "+deck.length+" · Sabes "+known+" de "+all+" en este tema";
+    stage.innerHTML=
+      '<button class="flash'+(flipped?" back":"")+'" id="flash" type="button" aria-label="'+(flipped?"Volver a la pregunta":"Ver la respuesta")+'">'+
+        '<span class="tag">'+TOPICS[q.t]+' · '+(flipped?"Respuesta":"Pregunta")+'</span>'+
+        '<span><span class="flash-text">'+(flipped?q.a:q.q)+'</span>'+(flipped&&q.x?'<br><span class="flash-x">'+q.x+'</span>':"")+'</span>'+
+        '<span class="hint">'+(flipped?"Toca para volver a la pregunta":"Toca para ver la respuesta")+'</span>'+
+      '</button>'+
+      '<div class="actions">'+
+        '<button class="btn" id="cPrev" type="button">Anterior</button>'+
+        (flipped?'<button class="btn" id="cNope" type="button">Aún no la sé</button><button class="btn primary" id="cYes" type="button">Ya la sé</button>':'<button class="btn primary" id="cShow" type="button">Ver respuesta</button>')+
+        '<button class="btn" id="cNext" type="button">Siguiente</button>'+
+      '</div>';
+    function flip(){flipped=!flipped;draw();document.getElementById("flash").focus();}
+    document.getElementById("flash").onclick=flip;
+    var show=document.getElementById("cShow"); if(show) show.onclick=flip;
+    document.getElementById("cPrev").onclick=function(){pos=(pos-1+deck.length)%deck.length;flipped=false;draw();};
+    document.getElementById("cNext").onclick=function(){pos=(pos+1)%deck.length;flipped=false;draw();};
+    var yes=document.getElementById("cYes"), no=document.getElementById("cNope");
+    if(yes) yes.onclick=function(){
+      S.known[id]=1; save();
+      if(missing){deck.splice(pos,1); if(pos>=deck.length)pos=0;} else {pos=(pos+1)%deck.length;}
+      flipped=false; draw();
+    };
+    if(no) no.onclick=function(){
+      delete S.known[id]; save();
+      pos=(pos+1)%deck.length; flipped=false; draw();
+    };
+  }
+  document.getElementById("fTopic").onchange=function(e){topic=e.target.value;build();};
+  document.getElementById("fMiss").onchange=function(e){missing=e.target.checked;build();};
+  document.getElementById("fShuffle").onclick=function(){deck=shuffle(deck);pos=0;flipped=false;draw();};
+  build();
+}
+
+/* ---------- Motor de preguntas ---------- */
+function runQuiz(root, ids, opts){
+  var items=ids.map(function(id){
+    var q=Q[id];
+    return {id:id, o:q.tf?["Verdadero","Falso"]:shuffle([q.a].concat(q.d)), pick:-1};
+  });
+  var i=0;
+  function isRight(it){return it.o[it.pick]===Q[it.id].a;}
+
+  function draw(){
+    if(i>=items.length){return result();}
+    var it=items[i], q=Q[it.id];
+    var locked=opts.reveal&&it.pick>=0;
+    var last=i===items.length-1;
+    var optsHtml=it.o.map(function(t,k){
+      var cls="";
+      if(locked){ if(t===q.a)cls=" ok"; else if(k===it.pick)cls=" bad"; }
+      else if(!opts.reveal&&it.pick===k){cls=" sel";}
+      return '<button type="button" class="opt'+cls+'" data-k="'+k+'"'+(locked?" disabled":"")+'><span class="ltr">'+"ABC".charAt(k)+'</span><span>'+t+'</span></button>';
+    }).join("");
+    var fb="";
+    if(locked){
+      var good=isRight(it);
+      fb='<div class="fb'+(good?"":" bad")+'"><strong>'+(good?"Correcto":"Repasa esta")+'</strong>'+
+         (good?"":'<p>La respuesta es: '+q.a+'</p>')+(q.x?'<p>'+q.x+'</p>':"")+'</div>';
+    }
+    var canNext=(opts.reveal&&locked)||(!opts.reveal&&it.pick>=0);
+    root.innerHTML='<div class="panel">'+
+      '<div class="qhead"><span>'+(opts.title?opts.title+" · ":"")+'Pregunta '+(i+1)+' de '+items.length+'</span><span class="tag">'+TOPICS[q.t]+'</span></div>'+
+      '<div class="bar"><i style="width:'+Math.round(i/items.length*100)+'%"></i></div>'+
+      '<h2 class="prompt">'+q.q+'</h2>'+
+      '<div class="opts">'+optsHtml+'</div>'+fb+
+      '<div class="actions"><button class="btn" id="qExit" type="button">Salir</button>'+
+      (canNext?'<button class="btn primary" id="qNext" type="button">'+(last?"Ver resultado":"Siguiente")+'</button>':"")+'</div></div>';
+    Array.prototype.forEach.call(root.querySelectorAll(".opt"),function(b){
+      b.onclick=function(){
+        if(opts.reveal&&it.pick>=0) return;
+        it.pick=parseInt(b.getAttribute("data-k"),10);
+        if(opts.reveal&&isRight(it)){S.solved[it.id]=1;save();updateLed();}
+        draw();
+        var nx=document.getElementById("qNext"); if(nx) nx.focus();
+      };
+    });
+    document.getElementById("qExit").onclick=opts.back;
+    var nx=document.getElementById("qNext"); if(nx) nx.onclick=function(){i++;draw();window.scrollTo(0,0);};
+  }
+
+  function result(){
+    var right=0, miss=[];
+    items.forEach(function(it){ if(isRight(it)){right++;S.solved[it.id]=1;} else miss.push(it); });
+    save(); updateLed();
+    var verdict="";
+    if(opts.need!=null){
+      var pass=right>=opts.need;
+      verdict='<div class="verdict '+(pass?"ok":"bad")+'">'+(pass?"Aprobado":"Aún no alcanza")+'</div><p class="muted">Se necesitan '+opts.need+' respuestas correctas.</p>';
+    } else {
+      verdict='<p class="muted">'+(miss.length?"Repasa las que fallaste y vuelve a intentarlo.":"Sin ningún error. Así se hace.")+'</p>';
+    }
+    var list=miss.length?'<ul class="misses">'+miss.map(function(it){var q=Q[it.id];return '<li><b>'+q.q+'</b>Respuesta: '+q.a+(q.x?'<br><span class="muted">'+q.x+'</span>':"")+'</li>';}).join("")+'</ul>':"";
+    root.innerHTML='<div class="panel"><h2>'+(opts.title||"Resultado")+'</h2><div class="score">'+right+'/'+items.length+'</div>'+verdict+list+
+      '<div class="actions">'+(miss.length?'<button class="btn primary" id="rMiss" type="button">Repasar las falladas</button>':"")+
+      '<button class="btn'+(miss.length?"":" primary")+'" id="rAgain" type="button">Volver a empezar</button></div></div>';
+    var rm=document.getElementById("rMiss");
+    if(rm) rm.onclick=function(){runQuiz(root,miss.map(function(it){return it.id;}),{reveal:true,back:opts.back,title:"Repaso de falladas"});};
+    document.getElementById("rAgain").onclick=opts.back;
+    window.scrollTo(0,0);
+  }
+  draw();
+}
+
+/* ---------- Práctica ---------- */
+function viewPractice(){
+  view.innerHTML='<div class="panel"><h2>Práctica</h2>'+
+    '<p class="muted">Cada respuesta te dice al instante si acertaste y por qué. Las que aciertas suman a tu avance.</p>'+
+    '<div class="toolbar"><label class="field" for="pTopic"><span>Tema</span><select id="pTopic">'+topicOptions(true)+'</select></label>'+
+    '<button class="btn primary" id="pGo" type="button">Empezar</button></div></div>';
+  document.getElementById("pGo").onclick=function(){
+    var t=document.getElementById("pTopic").value, ids=[];
+    for(var i=0;i<Q.length;i++){ if(t==="todas"||Q[i].t===t) ids.push(i); }
+    runQuiz(view,shuffle(ids),{reveal:true,back:viewPractice,title:"Práctica"});
+  };
+}
+
+/* ---------- Simulacro ---------- */
+function viewExam(){
+  view.innerHTML='<div class="panel"><h2>Simulacro</h2>'+
+    '<p>6 preguntas al azar de todos los temas. No verás si acertaste hasta el final, como en un examen.</p>'+
+    '<p class="muted">Necesitas 4 respuestas correctas para aprobar, igual que en el curso.</p>'+
+    '<div class="actions"><button class="btn primary" id="eGo" type="button">Empezar simulacro</button></div></div>';
+  document.getElementById("eGo").onclick=function(){
+    var ids=shuffle(Q.map(function(q,i){return i;})).slice(0,6);
+    runQuiz(view,ids,{reveal:false,need:4,back:viewExam,title:"Simulacro"});
+  };
+}
+
+/* ---------- Procedimiento ---------- */
+var STEPS={
+  acople:{
+    title:"Acoplar el puente",
+    intro:"",
+    list:[
+      "Encender las luces.",
+      "Hacer el 360 con inspección visual desde la escalera de servicio y revisar que no haya fallas ni alarmas en la pantalla ni en el VDGS.",
+      "Abrir la puerta de la cabina con el control DOOR.",
+      "Encender el puente con la llave en ON.",
+      "Fijar la preposición en la pantalla táctil, según el tipo de aeronave y la posición donde se va a adosar.",
+      "Acoplar con el joystick hasta dejar el puente a 2 metros de la puerta y hacer a mano los movimientos finales.",
+      "Girar la llave a AUTO LEVEL: la capota baja sola.",
+      "Retirar la cadena de seguridad.",
+      "Verificar que la tripulación pueda abrir la puerta.",
+      "Colocar el zapato de seguridad en el centro de la puerta, ya abierta."
+    ]
+  },
+  desacople:{
+    title:"Desacoplar el puente",
+    intro:"Parte del momento en que el personal de rampa ya retiró, aseguró y subió los cables de la GPU.",
+    list:[
+      "Cerrar la puerta de la aeronave.",
+      "Retirar el zapato de seguridad y llevarlo a su lugar, en contacto con la placa metálica.",
+      "Colocar la cadena de seguridad.",
+      "Encender las luces, si hace falta.",
+      "Hacer el 360 con inspección visual desde la escalera de servicio.",
+      "Verificar que no haya fallas ni alarmas en la pantalla principal.",
+      "Girar la llave de Autolevel a ON: la capota se retira sola.",
+      "Alejar el puente a una distancia prudente y poner la preposición en REPOSO.",
+      "Validar que aparezcan los 3 FINISH.",
+      "Verificar que los buggies estén dentro de la posición de reposo marcada en plataforma.",
+      "Bajar la puerta con el control DOOR.",
+      "Poner la llave en OFF.",
+      "Apagar las luces."
+    ]
+  }
+};
+function viewProc(){
+  var mode="acople", done=[], pool=[], errors=0, msg="";
+  function start(){
+    var n=STEPS[mode].list.length;
+    done=[]; errors=0; msg="";
+    pool=shuffle(Array.apply(null,Array(n)).map(function(_,i){return i;}));
+    draw();
+  }
+  function draw(){
+    var st=STEPS[mode], n=st.list.length, finished=done.length===n;
+    var html='<div class="panel"><h2>Ordena el procedimiento</h2>'+
+      '<p class="muted">Toca los pasos en el orden correcto. Si te equivocas, el paso se sacude y suma un error.</p>'+
+      '<div class="seg" role="group" aria-label="Procedimiento">'+
+      '<button type="button" data-m="acople" aria-pressed="'+(mode==="acople")+'">Acople</button>'+
+      '<button type="button" data-m="desacople" aria-pressed="'+(mode==="desacople")+'">Desacople</button></div>'+
+      (st.intro?'<p class="muted">'+st.intro+'</p>':"")+
+      '<p class="status">Paso '+Math.min(done.length+1,n)+' de '+n+' · Errores: '+errors+'</p>';
+    if(done.length){
+      html+='<ol class="done">'+done.map(function(s,k){return '<li><span class="n">'+(k+1)+'</span><span>'+st.list[s]+'</span></li>';}).join("")+'</ol>';
+    }
+    if(finished){
+      html+='<div class="fb"><strong>Procedimiento completo</strong><p>'+(errors===0?"Sin errores. Ya te lo sabes.":"Terminaste con "+errors+(errors===1?" error":" errores")+". Inténtalo otra vez para dejarlo en cero.")+'</p></div>'+
+        '<div class="actions"><button class="btn primary" id="prAgain" type="button">Intentar de nuevo</button></div>';
+    } else {
+      html+='<div class="pool">'+pool.map(function(s){return '<button type="button" class="step" data-s="'+s+'">'+st.list[s]+'</button>';}).join("")+'</div>';
+      if(msg) html+='<p class="status" style="margin-top:12px">'+msg+'</p>';
+      html+='<div class="actions"><button class="btn" id="prReset" type="button">Reiniciar</button></div>';
+    }
+    html+='</div>';
+    view.innerHTML=html;
+    Array.prototype.forEach.call(view.querySelectorAll(".seg button"),function(b){
+      b.onclick=function(){mode=b.getAttribute("data-m");start();};
+    });
+    Array.prototype.forEach.call(view.querySelectorAll(".step"),function(b){
+      b.onclick=function(){
+        var s=parseInt(b.getAttribute("data-s"),10);
+        if(s===done.length){
+          done.push(s); pool=pool.filter(function(x){return x!==s;}); msg=""; draw();
+        } else {
+          errors++; msg="Ese todavía no es el siguiente paso.";
+          b.classList.add("wrong");
+          view.querySelector(".status").textContent="Paso "+(done.length+1)+" de "+n+" · Errores: "+errors;
+        }
+      };
+    });
+    var ag=document.getElementById("prAgain"); if(ag) ag.onclick=start;
+    var rs=document.getElementById("prReset"); if(rs) rs.onclick=start;
+  }
+  start();
+}
+
+/* ---------- Tablero ---------- */
+var CTL=[
+  {n:"BRIDGE",g:"↑↓",t:"Botones BRIDGE",d:"Movimiento vertical del puente: hacia arriba o hacia abajo."},
+  {n:"CABIN",g:"←→",t:"Botones CABIN",d:"Rotación de cabina: gira hacia la derecha o la izquierda según el ajuste."},
+  {n:"FLOOR",g:"↑↓",t:"Botones FLOOR",d:"Ajuste de piso de la cabina de control."},
+  {n:"DOOR",g:"↑↓",t:"Botones DOOR",d:"Apertura y cierre de la puerta de cabina."},
+  {n:"JOYSTICK",g:"✥",t:"Palanca de control (JOYSTICK)",d:"Da el movimiento horizontal al puente: derecha e izquierda, adelante y atrás. Con LEFT y RIGHT el carretón de ruedas gira hacia ese lado. Solo opera si oprimes el DEAD MAN SWITCH: se presiona la parte superior de la cabeza hacia abajo."},
+  {n:"HOIST 1 / 2",g:"↑↓",t:"Botones HOIST 1 y HOIST 2",d:"Son los botones de los cables de la planta."},
+  {n:"FLOODLIGHT",g:"☀",t:"FLOODLIGHT",d:"Luz de la zona de plataforma. Es obligatorio encenderla en la operación nocturna."},
+  {n:"INTERNAL LIGHT",g:"☀",t:"INTERNAL LIGHT",d:"Luces internas del puente de embarque."},
+  {n:"LLAVE",g:"ON",t:"Llave: OFF, ON y AUTO LEVEL",d:"AUTO LEVEL activa el autonivelador al acoplar. ON lo desactiva para recoger el puente. OFF apaga el puente."},
+  {n:"POINT & GO",g:"⚙",t:"POINT & GO y MAINTENANCE",d:"Uso exclusivo del personal de mantenimiento de OPAIN: dirigen el puente a una posición para ese fin."},
+  {n:"PANTALLA TÁCTIL",g:"▭",t:"Pantalla de manipulación táctil",d:"Muestra la operación del puente. Ahí se fija la preposición según el tipo de aeronave y se ven los 3 FINISH: posición de llanta, altura y cabina."},
+  {n:"CÁMARA",g:"◉",t:"Cámara de visión en plataforma",d:"Muestra el perímetro del buggie y la escalera de servicio."},
+  {n:"EMERGENCY STOP",g:"■",red:true,t:"EMERGENCY STOP",d:"Se opera cuando el puente está en movimiento y hace un movimiento no deseado que expone la aeronave o el puente. El puente tiene 4 paros: cabina de mando, carretón de ruedas, gabinetes eléctricos y panel de usuario del VDGS."},
+  {n:"PRIORITY BACK-OFF",g:"■",red:true,t:"PRIORITY BACK-OFF",d:"Para emergencia extrema, cuando hay que aislar el puente de la aeronave o viceversa. Detiene todas las funciones del puente."}
+];
+function viewBoard(){
+  var sel=0;
+  view.innerHTML='<div class="panel"><h2>Tablero de mando</h2><p class="muted">Toca cada control para ver qué hace. Los rojos son de emergencia.</p>'+
+    '<div class="board" id="board"></div><div class="detail" id="detail"></div>'+
+    '<div class="chips" aria-label="Colores de los sensores"><span class="chip"><i style="background:var(--yellow)"></i>Sensores de aproximación: amarillos</span>'+
+    '<span class="chip"><i style="background:var(--blue)"></i>Sensores de contacto: azules</span></div></div>';
+  var board=document.getElementById("board"), detail=document.getElementById("detail");
+  function draw(){
+    board.innerHTML=CTL.map(function(c,k){
+      return '<button type="button" class="ctl'+(c.red?" red":"")+'" data-k="'+k+'" aria-pressed="'+(k===sel)+'"><span class="glyph" aria-hidden="true">'+c.g+'</span><span class="name">'+c.n+'</span></button>';
+    }).join("");
+    var c=CTL[sel];
+    detail.innerHTML='<h2>'+c.t+'</h2><p>'+c.d+'</p>';
+    Array.prototype.forEach.call(board.querySelectorAll(".ctl"),function(b){
+      b.onclick=function(){sel=parseInt(b.getAttribute("data-k"),10);draw();};
+    });
+  }
+  draw();
+}
+
+/* ---------- Pestañas ---------- */
+var TABS=[["Tarjetas",viewCards],["Práctica",viewPractice],["Simulacro",viewExam],["Procedimiento",viewProc],["Tablero",viewBoard]];
+function show(k){
+  Array.prototype.forEach.call(tabsEl.children,function(b,j){b.setAttribute("aria-selected",j===k?"true":"false");});
+  TABS[k][1]();
+}
+TABS.forEach(function(t,k){
+  var b=document.createElement("button");
+  b.type="button"; b.className="tab"; b.setAttribute("role","tab"); b.textContent=t[0];
+  b.onclick=function(){show(k);};
+  tabsEl.appendChild(b);
+});
+updateLed();
+show(0);
+})();
+</script>
+
+</body>
+</html>
